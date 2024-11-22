@@ -1,0 +1,78 @@
+{
+  "end_device_ids": {
+    "device_id": "lht-gronau",
+    "application_ids": {
+      "application_id": "project-software-engineering"
+    },
+    "dev_eui": "A84041C1818350AD",
+    "join_eui": "A000000000000100",
+    "dev_addr": "260B8F06"
+  },
+  "correlation_ids": [
+    "gs:uplink:01JD1T2025WV8NT8F6K03M0E07"
+  ],
+  "received_at": "2024-11-19T08:54:05.331518744Z",
+  "uplink_message": {
+    "session_key_id": "AZD+o8RtLhMeiTbGfmSFuQ==",
+    "f_port": 2,
+    "f_cnt": 8123,
+    "frm_payload": "ijgBKQPoBQEjf/8=",
+    "decoded_payload": {
+      "BatV": 2.616,
+      "Bat_status": 2,
+      "Hum_SHT": 100,
+      "ILL_lx": 291,
+      "TempC_SHT": 2.97,
+      "Work_mode": "Illumination Sensor"
+    },
+    "rx_metadata": [
+      {
+        "gateway_ids": {
+          "gateway_id": "lora-gronau-centrum",
+          "eui": "58A0CBFFFE801F2C"
+        },
+        "time": "2024-11-19T08:54:05.051613092Z",
+        "timestamp": 1068300851,
+        "rssi": -91,
+        "channel_rssi": -91,
+        "snr": 7.75,
+        "location": {
+          "latitude": 52.212645202154,
+          "longitude": 7.03965711534693,
+          "altitude": 41,
+          "source": "SOURCE_REGISTRY"
+        },
+        "uplink_token": "CiEKHwoTbG9yYS1ncm9uYXUtY2VudHJ1bRIIWKDL//6AHywQs/Sz/QMaCwitpPG5BhDDx9A7ILiuxd2L6RE=",
+        "received_at": "2024-11-19T08:54:05.064844996Z"
+      }
+    ],
+    "settings": {
+      "data_rate": {
+        "lora": {
+          "bandwidth": 125000,
+          "spreading_factor": 7,
+          "coding_rate": "4/5"
+        }
+      },
+      "frequency": "867300000",
+      "timestamp": 1068300851,
+      "time": "2024-11-19T08:54:05.051613092Z"
+    },
+    "received_at": "2024-11-19T08:54:05.125812507Z",
+    "consumed_airtime": "0.061696s",
+    "version_ids": {
+      "brand_id": "dragino",
+      "model_id": "lht65",
+      "hardware_version": "_unknown_hw_version_",
+      "firmware_version": "1.8",
+      "band_id": "EU_863_870"
+    },
+    "network_ids": {
+      "net_id": "000013",
+      "ns_id": "EC656E0000000181",
+      "tenant_id": "ttn",
+      "cluster_id": "eu1",
+      "cluster_address": "eu1.cloud.thethings.network"
+    }
+  }
+}

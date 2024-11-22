@@ -1,0 +1,102 @@
+{
+  "end_device_ids": {
+    "device_id": "mkr-saxion",
+    "application_ids": {
+      "application_id": "project-software-engineering"
+    },
+    "dev_eui": "A8610A353929630F",
+    "join_eui": "A000000000000100",
+    "dev_addr": "260B3587"
+  },
+  "correlation_ids": [
+    "pba:uplink:01JCQG34GSS9Z67KTEHP3GD1XF"
+  ],
+  "received_at": "2024-11-15T08:47:32.586955233Z",
+  "uplink_message": {
+    "session_key_id": "AZMGUWskX5R2Z2asRsEJ3A==",
+    "f_port": 2,
+    "f_cnt": 2275,
+    "frm_payload": "lIEVBy0=",
+    "decoded_payload": {
+      "humidity": 45,
+      "light": 129,
+      "pressure": 1024,
+      "temperature": 21.7
+    },
+    "rx_metadata": [
+      {
+        "gateway_ids": {
+          "gateway_id": "packetbroker"
+        },
+        "packet_broker": {
+          "message_id": "01JCQG34GSS9Z67KTEHP3GD1XF",
+          "forwarder_net_id": "000013",
+          "forwarder_tenant_id": "ttnv2",
+          "forwarder_cluster_id": "ttn-v2-legacy-eu",
+          "forwarder_gateway_eui": "AA555A000806053F",
+          "forwarder_gateway_id": "eui-aa555a000806053f",
+          "home_network_net_id": "000013",
+          "home_network_tenant_id": "ttn",
+          "home_network_cluster_id": "eu1.cloud.thethings.network"
+        },
+        "time": "2024-11-15T08:47:32.356835Z",
+        "rssi": -95,
+        "channel_rssi": -95,
+        "snr": -3,
+        "location": {
+          "latitude": 52.22121,
+          "longitude": 6.8857374,
+          "altitude": 66
+        },
+        "uplink_token": "CucCZXlKaGJHY2lPaUpCTVRJNFIwTk5TMWNpTENKbGJtTWlPaUpCTVRJNFIwTk5JaXdpYVhZaU9pSTBRalJsVmpCUVprNVdWMmxNU1Rkc0lpd2lkR0ZuSWpvaWQwNXhjMUIwVGxreWJXbzVVMEpKU2pGbE5VTlZaeUo5LmFtUXQ5OVBlb0VUaTFqdGxRbHZrY3cuWWZwZUVEUzNsNlFQYUtyaS5SVEFCZ1lPTzZBZkxnd3VnYUZSWmRDNmtqTEtlSGpUZ2tHRGt3RnhQTWxmTTVzWEZjSXZtX0ZPam9GZFJub3hmVmdhTDhEMXpjQ1pITXhHaHBYUTRfOVNOZllDNC0xd211Qm05a0N2VUdhWTNYWEJMUzhuWmlNUDI5a0JIcVRMQWpFbFVXbE1DbGtoa0ZTQTc3cWtpc3lWN3Q3SFBSb1VEZ1dQRmFlUTFGUUlFOXdNLkROTkZucThldEMtRTZ1MlZnUEdablEaHgoDAAATEgV0dG52MhoQdHRuLXYyLWxlZ2FjeS1ldQ==",
+        "received_at": "2024-11-15T08:47:32.374722098Z"
+      },
+      {
+        "gateway_ids": {
+          "gateway_id": "centrum-enschede",
+          "eui": "AC1F09FFFE057EE0"
+        },
+        "time": "2024-11-15T08:47:32.353126049Z",
+        "timestamp": 3282764397,
+        "rssi": -120,
+        "channel_rssi": -120,
+        "snr": -7.75,
+        "location": {
+          "latitude": 52.2212025684184,
+          "longitude": 6.88635438680649,
+          "altitude": 70,
+          "source": "SOURCE_REGISTRY"
+        },
+        "uplink_token": "Ch4KHAoQY2VudHJ1bS1lbnNjaGVkZRIIrB8J//4FfuAQ7YSsnQwaDAikldy5BhDh1qG1ASDI84WgxdME",
+        "received_at": "2024-11-15T08:47:32.367494429Z"
+      }
+    ],
+    "settings": {
+      "data_rate": {
+        "lora": {
+          "bandwidth": 125000,
+          "spreading_factor": 7,
+          "coding_rate": "4/5"
+        }
+      },
+      "frequency": "867500000"
+    },
+    "received_at": "2024-11-15T08:47:32.380499409Z",
+    "confirmed": true,
+    "consumed_airtime": "0.051456s",
+    "version_ids": {
+      "brand_id": "arduino",
+      "model_id": "mkr-wan-1310",
+      "hardware_version": "1.0",
+      "firmware_version": "1.2.0",
+      "band_id": "EU_863_870"
+    },
+    "network_ids": {
+      "net_id": "000013",
+      "ns_id": "EC656E0000000181",
+      "tenant_id": "ttn",
+      "cluster_id": "eu1",
+      "cluster_address": "eu1.cloud.thethings.network"
+    }
+  }
+}

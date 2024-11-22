@@ -1,0 +1,85 @@
+{
+  "end_device_ids": {
+    "device_id": "lht-wierden",
+    "application_ids": {
+      "application_id": "project-software-engineering"
+    },
+    "dev_eui": "A840414E618350B1",
+    "join_eui": "A000000000000100",
+    "dev_addr": "260BCC18"
+  },
+  "correlation_ids": [
+    "gs:uplink:01JD1TFZGTW6G8JY53Z06N8KTW"
+  ],
+  "received_at": "2024-11-19T09:01:43.528371599Z",
+  "uplink_message": {
+    "session_key_id": "AXxMYtR3CkBWclq0v9WHwQ==",
+    "f_port": 2,
+    "f_cnt": 82199,
+    "frm_payload": "y9MBMAO5BQEVf/8=",
+    "decoded_payload": {
+      "BatV": 3.027,
+      "Bat_status": 3,
+      "Hum_SHT": 95.3,
+      "ILL_lx": 277,
+      "TempC_SHT": 3.04,
+      "Work_mode": "Illumination Sensor"
+    },
+    "rx_metadata": [
+      {
+        "gateway_ids": {
+          "gateway_id": "slot-wierden",
+          "eui": "58A0CBFFFE8005DA"
+        },
+        "time": "2024-11-19T09:01:43.259736061Z",
+        "timestamp": 1487573204,
+        "rssi": -72,
+        "channel_rssi": -72,
+        "snr": 8,
+        "location": {
+          "latitude": 52.36891310514845,
+          "longitude": 6.602898538112641,
+          "altitude": 10,
+          "source": "SOURCE_REGISTRY"
+        },
+        "uplink_token": "ChoKGAoMc2xvdC13aWVyZGVuEghYoMv//oAF2hDUoarFBRoMCPen8bkGEP7Rv5kBIKD4ltKl9RE=",
+        "received_at": "2024-11-19T09:01:43.253524557Z"
+      }
+    ],
+    "settings": {
+      "data_rate": {
+        "lora": {
+          "bandwidth": 125000,
+          "spreading_factor": 7,
+          "coding_rate": "4/5"
+        }
+      },
+      "frequency": "867900000",
+      "timestamp": 1487573204,
+      "time": "2024-11-19T09:01:43.259736061Z"
+    },
+    "received_at": "2024-11-19T09:01:43.324109106Z",
+    "consumed_airtime": "0.061696s",
+    "locations": {
+      "user": {
+        "latitude": 52.368744969360165,
+        "longitude": 6.602897674665767,
+        "source": "SOURCE_REGISTRY"
+      }
+    },
+    "version_ids": {
+      "brand_id": "dragino",
+      "model_id": "lht65",
+      "hardware_version": "_unknown_hw_version_",
+      "firmware_version": "1.8",
+      "band_id": "EU_863_870"
+    },
+    "network_ids": {
+      "net_id": "000013",
+      "ns_id": "EC656E0000000181",
+      "tenant_id": "ttn",
+      "cluster_id": "eu1",
+      "cluster_address": "eu1.cloud.thethings.network"
+    }
+  }
+}

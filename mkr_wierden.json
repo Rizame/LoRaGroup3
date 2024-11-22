@@ -1,0 +1,77 @@
+{
+  "end_device_ids": {
+    "device_id": "mkr-wierden",
+    "application_ids": {
+      "application_id": "project-software-engineering"
+    },
+    "dev_eui": "A8610A3335407B06",
+    "join_eui": "A000000000000100",
+    "dev_addr": "260BBF28"
+  },
+  "correlation_ids": [
+    "gs:uplink:01JD1V0MKB7BKAKZEYNTN66DEF"
+  ],
+  "received_at": "2024-11-19T09:10:49.407855120Z",
+  "uplink_message": {
+    "session_key_id": "AZMCUejXm/Sl4voZscHSCA==",
+    "f_port": 2,
+    "f_cnt": 3655,
+    "frm_payload": "U+cLB4c=",
+    "decoded_payload": {
+      "humidity": 135,
+      "light": 231,
+      "pressure": 991.5,
+      "temperature": 11.7
+    },
+    "rx_metadata": [
+      {
+        "gateway_ids": {
+          "gateway_id": "slot-wierden",
+          "eui": "58A0CBFFFE8005DA"
+        },
+        "time": "2024-11-19T09:10:49.133985042Z",
+        "timestamp": 2033447556,
+        "rssi": -66,
+        "channel_rssi": -66,
+        "snr": 6.5,
+        "location": {
+          "latitude": 52.36891310514845,
+          "longitude": 6.602898538112641,
+          "altitude": 10,
+          "source": "SOURCE_REGISTRY"
+        },
+        "uplink_token": "ChoKGAoMc2xvdC13aWVyZGVuEghYoMv//oAF2hCE5c/JBxoLCJms8bkGELeio10goKetl5eFEg==",
+        "received_at": "2024-11-19T09:10:49.150822914Z"
+      }
+    ],
+    "settings": {
+      "data_rate": {
+        "lora": {
+          "bandwidth": 125000,
+          "spreading_factor": 7,
+          "coding_rate": "4/5"
+        }
+      },
+      "frequency": "867500000",
+      "timestamp": 2033447556,
+      "time": "2024-11-19T09:10:49.133985042Z"
+    },
+    "received_at": "2024-11-19T09:10:49.196624462Z",
+    "confirmed": true,
+    "consumed_airtime": "0.051456s",
+    "version_ids": {
+      "brand_id": "arduino",
+      "model_id": "mkr-wan-1310",
+      "hardware_version": "1.0",
+      "firmware_version": "1.2.0",
+      "band_id": "EU_863_870"
+    },
+    "network_ids": {
+      "net_id": "000013",
+      "ns_id": "EC656E0000000181",
+      "tenant_id": "ttn",
+      "cluster_id": "eu1",
+      "cluster_address": "eu1.cloud.thethings.network"
+    }
+  }
+}

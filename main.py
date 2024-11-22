@@ -51,19 +51,23 @@ def on_messageOWN(client, userdata, msg):
             
             latitude = payload["uplink_message"]["rx_metadata"][0]["location"]["latitude"]
             longitude = payload["uplink_message"]["rx_metadata"][0]["location"]["longitude"]
+            receivedAt = payload["received_at"]
             
             weatherDict = parseMKR(decoded_payload)
             pressure = weatherDict["pressure"]
             luminosity = weatherDict["luminosity"]
             temp = weatherDict["temperature"]
             humidity = weatherDict["humidity"]
+
             print("Temperature:", temp, "°C")
             print("Humidity:", humidity, "%")
             print("Luminosity:", luminosity, "Lux")
             print("Pressure:", pressure, "hPa")
+
             print(f"Latitude: {latitude}, Longitude: {longitude}")
             print(f"Latitude: {latitude}, Longitude: {longitude}")
             print(f"Received from: {payload["end_device_ids"]["device_id"]}")
+            print(f"Received at: {receivedAt}")
             
                     
         else:
@@ -102,6 +106,8 @@ def on_messageSAX(client, userdata, msg):
             if payload["uplink_message"]["version_ids"]["model_id"] =="lht65":
                 latitude = payload["uplink_message"]["rx_metadata"][0]["location"]['latitude']
                 longitude = payload["uplink_message"]["rx_metadata"][0]["location"]['longitude']
+                receivedAt = payload["received_at"]
+                
                 temp = (decoded_payload[2] << 8 | decoded_payload[3]) / 100
                 humidity = (decoded_payload[4] << 8 | decoded_payload[5]) / 10
                 luminosity = 0
@@ -116,9 +122,14 @@ def on_messageSAX(client, userdata, msg):
                 print("Humidity:", humidity, "%")
                 print("location:", latitude, "-", longitude)
 
+                print(f"Received from: {payload["end_device_ids"]["device_id"]}")
+                print(f"Received at: {receivedAt}")
+
             elif payload["uplink_message"]["version_ids"]["model_id"] =="mkr-wan-1310":
                 latitude = payload["uplink_message"]["rx_metadata"][0]["location"]['latitude']
                 longitude = payload["uplink_message"]["rx_metadata"][0]["location"]['longitude']
+                receivedAt = payload["received_at"]
+                
                 weatherDict = parseMKR(decoded_payload)
                 pressure = weatherDict["pressure"]
                 luminosity = weatherDict["luminosity"]
@@ -129,10 +140,10 @@ def on_messageSAX(client, userdata, msg):
                 print("Humidity:", humidity, "%")
                 print("Luminosity:", luminosity, "Lux")
                 print("Pressure:", pressure, "hPa")
-                print(f"Latitude: {latitude}, Longitude: {longitude}")
 
+                print(f"Latitude: {latitude}, Longitude: {longitude}")
                 print(f"Received from: {payload["end_device_ids"]["device_id"]}")
-        
+                print(f"Received at: {receivedAt}")
     
 
                     
@@ -164,8 +175,8 @@ clientOWN.connect(MQTT_BROKER)
 clientSAX.connect(MQTT_BROKER)
 
 
-clientOWN.loop_start()
-#clientSAX.loop_start()
+#clientOWN.loop_start()
+clientSAX.loop_start()
 
 
 

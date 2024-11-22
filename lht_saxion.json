@@ -1,0 +1,105 @@
+{
+  "end_device_ids": {
+    "device_id": "lht-saxion",
+    "application_ids": {
+      "application_id": "project-software-engineering"
+    },
+    "dev_eui": "A840411661835048",
+    "join_eui": "A000000000000100",
+    "dev_addr": "260BD1AD"
+  },
+  "correlation_ids": [
+    "gs:uplink:01JD1TAF802CH1R7BTZB9E0FG1"
+  ],
+  "received_at": "2024-11-19T08:58:43.020707649Z",
+  "uplink_message": {
+    "session_key_id": "AYxEvmpWqonV5oA6bxAtgQ==",
+    "f_port": 2,
+    "f_cnt": 25041,
+    "frm_payload": "y+cIHgGHAQDaf/8=",
+    "decoded_payload": {
+      "BatV": 3.047,
+      "Bat_status": 3,
+      "Ext_sensor": "Temperature Sensor",
+      "Hum_SHT": 39.1,
+      "TempC_DS": 2.18,
+      "TempC_SHT": 20.78
+    },
+    "rx_metadata": [
+      {
+        "gateway_ids": {
+          "gateway_id": "centrum-enschede",
+          "eui": "AC1F09FFFE057EE0"
+        },
+        "time": "2024-11-19T08:58:42.790510892Z",
+        "timestamp": 3655491591,
+        "rssi": -108,
+        "channel_rssi": -108,
+        "snr": 4.75,
+        "location": {
+          "latitude": 52.2212025684184,
+          "longitude": 6.88635438680649,
+          "altitude": 70,
+          "source": "SOURCE_REGISTRY"
+        },
+        "uplink_token": "Ch4KHAoQY2VudHJ1bS1lbnNjaGVkZRIIrB8J//4FfuAQh8CJzw0aDAjCpvG5BhCl+ZGFAyDYtpziseQC",
+        "received_at": "2024-11-19T08:58:42.803808840Z"
+      },
+      {
+        "gateway_ids": {
+          "gateway_id": "packetbroker"
+        },
+        "packet_broker": {
+          "message_id": "01JD1TAF9SS85QDE7Y3T3X1JV6",
+          "forwarder_net_id": "000013",
+          "forwarder_tenant_id": "ttnv2",
+          "forwarder_cluster_id": "ttn-v2-legacy-eu",
+          "forwarder_gateway_eui": "AA555A000806053F",
+          "forwarder_gateway_id": "eui-aa555a000806053f",
+          "home_network_net_id": "000013",
+          "home_network_tenant_id": "ttn",
+          "home_network_cluster_id": "eu1.cloud.thethings.network"
+        },
+        "time": "2024-11-19T08:58:42.800516Z",
+        "rssi": -96,
+        "channel_rssi": -96,
+        "snr": 9.5,
+        "location": {
+          "latitude": 52.22121,
+          "longitude": 6.8857374,
+          "altitude": 66
+        },
+        "uplink_token": "CucCZXlKaGJHY2lPaUpCTVRJNFIwTk5TMWNpTENKbGJtTWlPaUpCTVRJNFIwTk5JaXdpYVhZaU9pSmtaVzkyU1ZSSFQwcEdUa0p4Y2pKM0lpd2lkR0ZuSWpvaVVuVmlTbWxuV2kwelN6QldibVpsV0VaMFpXTnRaeUo5LjNxWC1ONFp0LW9wSWZ2VlZLcDRwUVEuNV9sd2hGeXZfRVowdUhONy42T2NtclNLc1VYYjcyVVMwWmc2ZzRMR0lENE1zeVppaEhVQU04TmtOU0wxdTNkVUhxdl9IckZNTDZJOFh6MF9vOHZRcC11d09BX3BzbEhKS25qQ3ZnN21rNktrX1hCaUNXbkM1VzdGMVBTeF95VmFaWnBlZERMdUVuQzlXaFJNYWV3d0hicWtuOVE5X05vOHhITW5kVmVGeVBZUVVvY1FkcGRPY0NaUkRxNnpmQ1hNLkdJREpEcHlzX09SYV9Ba0pZMzFxQ0EaHgoDAAATEgV0dG52MhoQdHRuLXYyLWxlZ2FjeS1ldQ==",
+        "received_at": "2024-11-19T08:58:42.870148196Z"
+      }
+    ],
+    "settings": {
+      "data_rate": {
+        "lora": {
+          "bandwidth": 125000,
+          "spreading_factor": 7,
+          "coding_rate": "4/5"
+        }
+      },
+      "frequency": "867100000",
+      "timestamp": 3655491591,
+      "time": "2024-11-19T08:58:42.790510892Z"
+    },
+    "received_at": "2024-11-19T08:58:42.817038535Z",
+    "consumed_airtime": "0.061696s",
+    "version_ids": {
+      "brand_id": "dragino",
+      "model_id": "lht65",
+      "hardware_version": "_unknown_hw_version_",
+      "firmware_version": "1.8",
+      "band_id": "EU_863_870"
+    },
+    "network_ids": {
+      "net_id": "000013",
+      "ns_id": "EC656E0000000181",
+      "tenant_id": "ttn",
+      "cluster_id": "eu1",
+      "cluster_address": "eu1.cloud.thethings.network"
+    }
+  }
+}
