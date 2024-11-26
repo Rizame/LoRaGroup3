@@ -1,0 +1,21 @@
+CREATE DATABASE weather_state
+
+CREATE TABLE device(
+    deviceID CHAR(50) PRIMARY KEY,
+    modelID CHAR(50),
+    latitude FLOAT,
+    longitude FLOAT,
+    altitude FLOAT
+
+);
+
+CREATE TABLE weather(
+    key_id INT IDENTITY(1,1) PRIMARY KEY,
+    humidity FLOAT,
+    temperature float,
+    luminosity FLOAT,
+    pressure float, 
+    date DATETIME2,
+    deviceID CHAR(50),
+    FOREIGN KEY (deviceID) REFERENCES device(deviceID)
+)
