@@ -5,10 +5,10 @@ import base64
 import json
 
 # Connection details
-server = 'localhost,1433'
-database = 'weather_state_test'
-username = 'sa'
-password = 'dockerStrongPwd123'
+server = 'group13.database.windows.net,1433'
+database = 'weather_state'
+username = 'cloudadmin'
+password = 'Group13pass'
 
 # Connection string using ODBC Driver 18
 connection_string = f'DRIVER={{ODBC Driver 18 for SQL Server}};SERVER={server};DATABASE={database};UID={username};PWD={password};TrustServerCertificate=yes'
@@ -62,10 +62,13 @@ def on_messageOWN(client, userdata, msg):
     
         if "uplink_message" in payload:
             b64_data = payload["uplink_message"]["frm_payload"]
+            deviceID = payload["end_device_ids"]["device_id"]
+            modelID = payload["uplink_message"]["version_ids"]["model_id"]
             print(f"Base64 payload: {b64_data}")
             
             latitude = payload["uplink_message"]["rx_metadata"][0]["location"]["latitude"]
             longitude = payload["uplink_message"]["rx_metadata"][0]["location"]["longitude"]
+            altitude = payload["uplink_message"]["rx_metadata"][0]["location"]["altitude"]
             receivedAt = payload["received_at"]
             
             weatherDict = parseMKR(decoded_payload)
@@ -95,11 +98,11 @@ def on_messageOWN(client, userdata, msg):
             device_exists = cursor.fetchone()
             #insert device if not existing
             if not device_exists:
-                cursor.execute("""INSERT INTO device(deviceID, longitude, latitude, altitude, city)  VALUES (?, ?, ?, ?, ?) """, ("own", longitude, latitude, None, None))
+                cursor.execute("""INSERT INTO device(deviceID, longitude, latitude, altitude, modelID)  VALUES (?, ?, ?, ?, ?) """, (deviceID, longitude, latitude, altitude, modelID))
             else:
                  print("own device already exists, skipping device insertion.")
             #insert weather data
-            cursor.execute("""INSERT INTO weather(humidity, luminosity, pressure, temperature, date, deviceID) VALUES (?, ?, ?, ?, ?, ?)""", (humidity, luminosity, pressure, temp, receivedAt, "own"))
+            cursor.execute("""INSERT INTO weather(humidity, luminosity, pressure, temperature, date, deviceID) VALUES (?, ?, ?, ?, ?, ?)""", (humidity, luminosity, pressure, temp, receivedAt, deviceID))
             cursor.commit()
             cursor.close()
             print("Inserted succesfuly")
@@ -139,6 +142,7 @@ def on_messageSAX(client, userdata, msg):
             if payload["uplink_message"]["version_ids"]["model_id"] =="lht65":
                 latitude = payload["uplink_message"]["rx_metadata"][0]["location"]['latitude']
                 longitude = payload["uplink_message"]["rx_metadata"][0]["location"]['longitude']
+                altitude = payload["uplink_message"]["rx_metadata"][0]["location"]['altitude']
                 receivedAt = payload["received_at"]
                 
                 temp = (decoded_payload[2] << 8 | decoded_payload[3]) / 100
@@ -161,6 +165,7 @@ def on_messageSAX(client, userdata, msg):
             elif payload["uplink_message"]["version_ids"]["model_id"] =="mkr-wan-1310":
                 latitude = payload["uplink_message"]["rx_metadata"][0]["location"]['latitude']
                 longitude = payload["uplink_message"]["rx_metadata"][0]["location"]['longitude']
+                altitude = payload["uplink_message"]["rx_metadata"][0]["location"]['altitude']
                 receivedAt = payload["received_at"]
                 
                 weatherDict = parseMKR(decoded_payload)
@@ -188,11 +193,13 @@ def on_messageSAX(client, userdata, msg):
  
             #insert device if it doesnt exist
             if not device_exists:
-                cursor.execute(""" INSERT INTO device(deviceID, longitude, latitude, altitude, city) VALUES (?, ?, ?, ?, ?)""", (deviceID, longitude, latitude, None, None))
+                cursor.execute(""" INSERT INTO device(deviceID, longitude, latitude, altitude, modelID) 
+                VALUES (?, ?, ?, ?, ?)""", (deviceID, longitude, latitude, altitude, modelID))
             else:
-                print("own device already exists, skipping device insertion.")
+                print(f"{deviceID} device already exists, skipping device insertion.")
                 #insert weather data
-            cursor.execute("""INSERT INTO weather(humidity, luminosity, pressure, temperature, date, deviceID) VALUES (?, ?, ?, ?, ?, ?)""", (humidity, luminosity, pressure, temp, receivedAt, deviceID))
+            cursor.execute("""INSERT INTO weather(humidity, luminosity, pressure, temperature, date, deviceID) 
+            VALUES (?, ?, ?, ?, ?, ?)""", (humidity, luminosity, pressure, temp, receivedAt, deviceID))
             cursor.commit()
             cursor.close()
             print("Inserted succesfuly")
