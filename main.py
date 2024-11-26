@@ -1,189 +1,298 @@
-import traceback
-import paho.mqtt.client as mqtt
-import base64
-import json
-
-MQTT_TOPIC = "v3/ibfkpj@ttn/devices/ibfklora/up"
-MQTTSAX_TOPIC = "v3/project-software-engineering@ttn/devices/+/up"
-MQTT_BROKER = "eu1.cloud.thethings.network"
-MQTT_PORT = 1883
-
-MQTT_USERNAME = "ibfkpj@ttn"
-MQTTSAX_USERNAME = "project-software-engineering@ttn"
-
-MQTT_PASSWORD = "NNSXS.LXYD6VAHPEP5VRUS7TIRO6K3OQA2KYEHS74CIFQ.ETFHW5J36LBAQ4ND6TYK4KV6MIEPGBT63M4VVEIN3M7M5US52NAQ" 
-MQTTSAX_PASSWORD = "NNSXS.DTT4HTNBXEQDZ4QYU6SG73Q2OXCERCZ6574RVXI.CQE6IG6FYNJOO2MOFMXZVWZE4GXTCC2YXNQNFDLQL4APZMWU6ZGA"
-
-
-
-
-
-
-
-
-
-
-
-def on_connectOWN(client, userdata, flags, rc):
-    if rc == 0:
-        print("Connected to own device")
-        client.subscribe(MQTT_TOPIC)
-    else:
-        print(f"Connection failed with code {rc}")
-
-def on_connectSAX(client, userdata, flags, rc):
-    if rc == 0:
-        print("Connected to Saxion Devices")
-        client.subscribe(MQTTSAX_TOPIC)
-    else:
-        print(f"Connection failed with code {rc}")        
-
-def on_messageOWN(client, userdata, msg):
-    try:
-        #parsing
-        payload = json.loads(msg.payload.decode('utf-8'))
-        decoded_payload = base64.b64decode(payload["uplink_message"]["frm_payload"])
-        print(f"Decoded payload: {decoded_payload}")
-    
-        if "uplink_message" in payload:
-            b64_data = payload["uplink_message"]["frm_payload"]
-            print(f"Base64 payload: {b64_data}")
-            
-            latitude = payload["uplink_message"]["rx_metadata"][0]["location"]["latitude"]
-            longitude = payload["uplink_message"]["rx_metadata"][0]["location"]["longitude"]
-            receivedAt = payload["received_at"]
-            
-            weatherDict = parseMKR(decoded_payload)
-            pressure = weatherDict["pressure"]
-            luminosity = weatherDict["luminosity"]
-            temp = weatherDict["temperature"]
-            humidity = weatherDict["humidity"]
-
-            print("Temperature:", temp, "°C")
-            print("Humidity:", humidity, "%")
-            print("Luminosity:", luminosity, "Lux")
-            print("Pressure:", pressure, "hPa")
-
-            print(f"Latitude: {latitude}, Longitude: {longitude}")
-            print(f"Latitude: {latitude}, Longitude: {longitude}")
-            print(f"Received from: {payload["end_device_ids"]["device_id"]}")
-            print(f"Received at: {receivedAt}")
-            
-                    
-        else:
-            print("uplink_message was not found in payload")
-
-        
-
-    except Exception as e:
-        print(f"Error processing message: {e}")
-        print(traceback.format_exc())
-
-
-def parseMKR(decoded_payload):
-    pressure = decoded_payload[0]/2+950
-    luminosity = decoded_payload[1]
-    temp = decoded_payload[2] + decoded_payload[3] / 10
-    humidity = decoded_payload[4]
-    return {
-        'luminosity': luminosity,
-        'temperature': temp,
-        'humidity' : humidity,
-        'pressure' : pressure
-    }
-
-def on_messageSAX(client, userdata, msg):
-    try:
-        #parsing
-        payload = json.loads(msg.payload.decode('utf-8'))
-
-    
-        if "uplink_message" in payload:
-
-            decoded_payload = base64.b64decode(payload["uplink_message"]["frm_payload"])
-            print(f"Decoded payload: {decoded_payload}")
-
-            if payload["uplink_message"]["version_ids"]["model_id"] =="lht65":
-                latitude = payload["uplink_message"]["rx_metadata"][0]["location"]['latitude']
-                longitude = payload["uplink_message"]["rx_metadata"][0]["location"]['longitude']
-                receivedAt = payload["received_at"]
-                
-                temp = (decoded_payload[2] << 8 | decoded_payload[3]) / 100
-                humidity = (decoded_payload[4] << 8 | decoded_payload[5]) / 10
-                luminosity = 0
-                externalTemp = 0
-                if decoded_payload[6] == 1:
-                    externalTemp = decoded_payload[7] << 8 | decoded_payload[8]
-                    print(f"External temperature: {externalTemp}°C")
-                elif decoded_payload[6] == 5:
-                    luminosity = decoded_payload[7] << 8 | decoded_payload[8]
-                    print(f"Luminosity: {luminosity}%")
-                print("Temperature:", temp, "°C")
-                print("Humidity:", humidity, "%")
-                print("location:", latitude, "-", longitude)
-
-                print(f"Received from: {payload["end_device_ids"]["device_id"]}")
-                print(f"Received at: {receivedAt}")
-
-            elif payload["uplink_message"]["version_ids"]["model_id"] =="mkr-wan-1310":
-                latitude = payload["uplink_message"]["rx_metadata"][0]["location"]['latitude']
-                longitude = payload["uplink_message"]["rx_metadata"][0]["location"]['longitude']
-                receivedAt = payload["received_at"]
-                
-                weatherDict = parseMKR(decoded_payload)
-                pressure = weatherDict["pressure"]
-                luminosity = weatherDict["luminosity"]
-                temp = weatherDict["temperature"]
-                humidity = weatherDict["humidity"]
-
-                print("Temperature:", temp, "°C")
-                print("Humidity:", humidity, "%")
-                print("Luminosity:", luminosity, "Lux")
-                print("Pressure:", pressure, "hPa")
-
-                print(f"Latitude: {latitude}, Longitude: {longitude}")
-                print(f"Received from: {payload["end_device_ids"]["device_id"]}")
-                print(f"Received at: {receivedAt}")
-    
-
-                    
-        else:
-            print("uplink_message was not found in payload")
-
-        
-
-    except Exception as e:
-        print(f"Error processing message: {e}")
-        print(traceback.format_exc())
-
-
-
-clientOWN = mqtt.Client()
-clientSAX = mqtt.Client()
-
-clientOWN.username_pw_set(MQTT_USERNAME, MQTT_PASSWORD)
-clientSAX.username_pw_set(MQTTSAX_USERNAME, MQTTSAX_PASSWORD)
-
-clientOWN.on_connect = on_connectOWN
-clientOWN.on_message = on_messageOWN
-
-clientSAX.on_connect = on_connectSAX
-clientSAX.on_message = on_messageSAX
-
-print("Connecting to TTN MQTT broker...")
-clientOWN.connect(MQTT_BROKER)
-clientSAX.connect(MQTT_BROKER)
-
-
-#clientOWN.loop_start()
-clientSAX.loop_start()
-
-
-
-try:
-    while True:
-        pass
-except KeyboardInterrupt:
-    clientOWN.disconnect()
-    clientSAX.disconnect()
-    print("\nDisconnecting...")
+{
+    "metadata": {
+        "kernelspec": {
+            "name": "python3",
+            "display_name": "Python 3",
+            "language": "python"
+        },
+        "language_info": {
+            "name": "python",
+            "version": "3.7.3",
+            "mimetype": "text/x-python",
+            "codemirror_mode": {
+                "name": "ipython",
+                "version": 3
+            },
+            "pygments_lexer": "ipython3",
+            "nbconvert_exporter": "python",
+            "file_extension": ".py"
+        }
+    },
+    "nbformat_minor": 2,
+    "nbformat": 4,
+    "cells": [
+        {
+            "cell_type": "code",
+            "source": [
+                "import pyodbc\n",
+                "import traceback\n",
+                "import paho.mqtt.client as mqtt\n",
+                "import base64\n",
+                "import json\n",
+                "\n",
+                "# Connection details\n",
+                "server = 'localhost,1433'\n",
+                "database = 'weather_state_test'\n",
+                "username = 'sa'\n",
+                "password = 'dockerStrongPwd123'\n",
+                "\n",
+                "# Connection string using ODBC Driver 18\n",
+                "connection_string = f'DRIVER={{ODBC Driver 18 for SQL Server}};SERVER={server};DATABASE={database};UID={username};PWD={password};TrustServerCertificate=yes'\n",
+                "\n",
+                "# Connect to the database\n",
+                "conn = pyodbc.connect(connection_string)\n",
+                "\n",
+                "\n",
+                "\n",
+                "MQTT_TOPIC = \"v3/ibfkpj@ttn/devices/ibfklora/up\"\n",
+                "MQTTSAX_TOPIC = \"v3/project-software-engineering@ttn/devices/+/up\"\n",
+                "MQTT_BROKER = \"eu1.cloud.thethings.network\"\n",
+                "MQTT_PORT = 1883\n",
+                "\n",
+                "MQTT_USERNAME = \"ibfkpj@ttn\"\n",
+                "MQTTSAX_USERNAME = \"project-software-engineering@ttn\"\n",
+                "\n",
+                "MQTT_PASSWORD = \"NNSXS.LXYD6VAHPEP5VRUS7TIRO6K3OQA2KYEHS74CIFQ.ETFHW5J36LBAQ4ND6TYK4KV6MIEPGBT63M4VVEIN3M7M5US52NAQ\" \n",
+                "MQTTSAX_PASSWORD = \"NNSXS.DTT4HTNBXEQDZ4QYU6SG73Q2OXCERCZ6574RVXI.CQE6IG6FYNJOO2MOFMXZVWZE4GXTCC2YXNQNFDLQL4APZMWU6ZGA\"\n",
+                "\n",
+                "\n",
+                "\n",
+                "\n",
+                "\n",
+                "\n",
+                "\n",
+                "\n",
+                "\n",
+                "\n",
+                "\n",
+                "def on_connectOWN(client, userdata, flags, rc):\n",
+                "    if rc == 0:\n",
+                "        print(\"Connected to own device\")\n",
+                "        client.subscribe(MQTT_TOPIC)\n",
+                "    else:\n",
+                "        print(f\"Connection failed with code {rc}\")\n",
+                "\n",
+                "def on_connectSAX(client, userdata, flags, rc):\n",
+                "    if rc == 0:\n",
+                "        print(\"Connected to Saxion Devices\")\n",
+                "        client.subscribe(MQTTSAX_TOPIC)\n",
+                "    else:\n",
+                "        print(f\"Connection failed with code {rc}\")        \n",
+                "\n",
+                "def on_messageOWN(client, userdata, msg):\n",
+                "    try:\n",
+                "        #parsing\n",
+                "        payload = json.loads(msg.payload.decode('utf-8'))\n",
+                "        decoded_payload = base64.b64decode(payload[\"uplink_message\"][\"frm_payload\"])\n",
+                "        print(f\"Decoded payload: {decoded_payload}\")\n",
+                "    \n",
+                "        if \"uplink_message\" in payload:\n",
+                "            b64_data = payload[\"uplink_message\"][\"frm_payload\"]\n",
+                "            print(f\"Base64 payload: {b64_data}\")\n",
+                "            \n",
+                "            latitude = payload[\"uplink_message\"][\"rx_metadata\"][0][\"location\"][\"latitude\"]\n",
+                "            longitude = payload[\"uplink_message\"][\"rx_metadata\"][0][\"location\"][\"longitude\"]\n",
+                "            receivedAt = payload[\"received_at\"]\n",
+                "            \n",
+                "            weatherDict = parseMKR(decoded_payload)\n",
+                "            pressure = weatherDict[\"pressure\"]\n",
+                "            luminosity = weatherDict[\"luminosity\"]\n",
+                "            temp = weatherDict[\"temperature\"]\n",
+                "            humidity = weatherDict[\"humidity\"]\n",
+                "\n",
+                "            print(\"Temperature:\", temp, \"°C\")\n",
+                "            print(\"Humidity:\", humidity, \"%\")\n",
+                "            print(\"Luminosity:\", luminosity, \"Lux\")\n",
+                "            print(\"Pressure:\", pressure, \"hPa\")\n",
+                "\n",
+                "            print(f\"Latitude: {latitude}, Longitude: {longitude}\")\n",
+                "            print(f\"Latitude: {latitude}, Longitude: {longitude}\")\n",
+                "            print(f\"Received from: {payload['end_device_ids']['device_id']}\")\n",
+                "\n",
+                "            print(f\"Received at: {receivedAt}\")\n",
+                "            deviceID = payload[\"end_device_ids\"][\"device_id\"]\n",
+                "            modelID = payload[\"uplink_message\"][\"version_ids\"][\"model_id\"]\n",
+                "            #Create a cursor\n",
+                "            cursor = conn.cursor()\n",
+                "            #Check the existence of device\n",
+                "            deviceID = \"own\"\n",
+                "            query = \"SELECT 1 FROM device WHERE deviceID = ?\"\n",
+                "            cursor.execute(query, (deviceID,))\n",
+                "            device_exists = cursor.fetchone()\n",
+                "            #insert device if not existing\n",
+                "            if not device_exists:\n",
+                "                cursor.execute(\"\"\"INSERT INTO device(deviceID, longitude, latitude, altitude, city)  VALUES (?, ?, ?, ?, ?) \"\"\", (\"own\", longitude, latitude, None, None))\n",
+                "            else:\n",
+                "                 print(\"own device already exists, skipping device insertion.\")\n",
+                "            #insert weather data\n",
+                "            cursor.execute(\"\"\"INSERT INTO weather(humidity, luminosity, pressure, temperature, date, deviceID) VALUES (?, ?, ?, ?, ?, ?)\"\"\", (humidity, luminosity, pressure, temp, receivedAt, \"own\"))\n",
+                "            cursor.commit()\n",
+                "            cursor.close()\n",
+                "            print(\"Inserted succesfuly\")\n",
+                "        else:\n",
+                "            print(\"uplink_message was not found in payload\")\n",
+                "\n",
+                "        \n",
+                "\n",
+                "    except Exception as e:\n",
+                "        print(f\"Error processing message: {e}\")\n",
+                "        print(traceback.format_exc())\n",
+                "\n",
+                "\n",
+                "def parseMKR(decoded_payload):\n",
+                "    pressure = decoded_payload[0]/2+950\n",
+                "    luminosity = decoded_payload[1]\n",
+                "    temp = decoded_payload[2] + decoded_payload[3] / 10\n",
+                "    humidity = decoded_payload[4]\n",
+                "    return {\n",
+                "        'luminosity': luminosity,\n",
+                "        'temperature': temp,\n",
+                "        'humidity' : humidity,\n",
+                "        'pressure' : pressure\n",
+                "    }\n",
+                "\n",
+                "def on_messageSAX(client, userdata, msg):\n",
+                "    try:\n",
+                "        #parsing\n",
+                "        payload = json.loads(msg.payload.decode('utf-8'))\n",
+                "        pressure = None\n",
+                "    \n",
+                "        if \"uplink_message\" in payload:\n",
+                "\n",
+                "            decoded_payload = base64.b64decode(payload[\"uplink_message\"][\"frm_payload\"])\n",
+                "            print(f\"Decoded payload: {decoded_payload}\")\n",
+                "\n",
+                "            if payload[\"uplink_message\"][\"version_ids\"][\"model_id\"] ==\"lht65\":\n",
+                "                latitude = payload[\"uplink_message\"][\"rx_metadata\"][0][\"location\"]['latitude']\n",
+                "                longitude = payload[\"uplink_message\"][\"rx_metadata\"][0][\"location\"]['longitude']\n",
+                "                receivedAt = payload[\"received_at\"]\n",
+                "                \n",
+                "                temp = (decoded_payload[2] << 8 | decoded_payload[3]) / 100\n",
+                "                humidity = (decoded_payload[4] << 8 | decoded_payload[5]) / 10\n",
+                "                luminosity = 0\n",
+                "                externalTemp = 0\n",
+                "                if decoded_payload[6] == 1:\n",
+                "                    externalTemp = decoded_payload[7] << 8 | decoded_payload[8]\n",
+                "                    print(f\"External temperature: {externalTemp}°C\")\n",
+                "                elif decoded_payload[6] == 5:\n",
+                "                    luminosity = decoded_payload[7] << 8 | decoded_payload[8]\n",
+                "                    print(f\"Luminosity: {luminosity}%\")\n",
+                "                print(\"Temperature:\", temp, \"°C\")\n",
+                "                print(\"Humidity:\", humidity, \"%\")\n",
+                "                print(\"location:\", latitude, \"-\", longitude)\n",
+                "\n",
+                "                print(f\"Received from: {payload['end_device_ids']['device_id']}\")\n",
+                "                print(f\"Received at: {receivedAt}\")\n",
+                "\n",
+                "            elif payload[\"uplink_message\"][\"version_ids\"][\"model_id\"] ==\"mkr-wan-1310\":\n",
+                "                latitude = payload[\"uplink_message\"][\"rx_metadata\"][0][\"location\"]['latitude']\n",
+                "                longitude = payload[\"uplink_message\"][\"rx_metadata\"][0][\"location\"]['longitude']\n",
+                "                receivedAt = payload[\"received_at\"]\n",
+                "                \n",
+                "                weatherDict = parseMKR(decoded_payload)\n",
+                "                pressure = weatherDict[\"pressure\"]\n",
+                "                luminosity = weatherDict[\"luminosity\"]\n",
+                "                temp = weatherDict[\"temperature\"]\n",
+                "                humidity = weatherDict[\"humidity\"]\n",
+                "\n",
+                "                print(\"Temperature:\", temp, \"°C\")\n",
+                "                print(\"Humidity:\", humidity, \"%\")\n",
+                "                print(\"Luminosity:\", luminosity, \"Lux\")\n",
+                "                print(\"Pressure:\", pressure, \"hPa\")\n",
+                "\n",
+                "                print(f\"Latitude: {latitude}, Longitude: {longitude}\")\n",
+                "                print(f\"Received from: {payload['end_device_ids']['device_id']}\")\n",
+                "                print(f\"Received at: {receivedAt}\")\n",
+                "            deviceID = payload[\"end_device_ids\"][\"device_id\"]\n",
+                "            modelID = payload[\"uplink_message\"][\"version_ids\"][\"model_id\"]\n",
+                "            \n",
+                "            cursor = conn.cursor()\n",
+                "            #check the existance of device (referenced from gpt)\n",
+                "            query = \"SELECT 1 FROM device WHERE deviceID = ?\"\n",
+                "            cursor.execute(query, (deviceID,))\n",
+                "            device_exists = cursor.fetchone()\n",
+                " \n",
+                "            #insert device if it doesnt exist\n",
+                "            if not device_exists:\n",
+                "                cursor.execute(\"\"\" INSERT INTO device(deviceID, longitude, latitude, altitude, city) VALUES (?, ?, ?, ?, ?)\"\"\", (deviceID, longitude, latitude, None, None))\n",
+                "            else:\n",
+                "                print(\"own device already exists, skipping device insertion.\")\n",
+                "                #insert weather data\n",
+                "            cursor.execute(\"\"\"INSERT INTO weather(humidity, luminosity, pressure, temperature, date, deviceID) VALUES (?, ?, ?, ?, ?, ?)\"\"\", (humidity, luminosity, pressure, temp, receivedAt, deviceID))\n",
+                "            cursor.commit()\n",
+                "            cursor.close()\n",
+                "            print(\"Inserted succesfuly\")\n",
+                "            \n",
+                "\n",
+                "          \n",
+                "        else:\n",
+                "            print(\"uplink_message was not found in payload\")\n",
+                "\n",
+                "        \n",
+                "\n",
+                "    except Exception as e:\n",
+                "        print(f\"Error processing message: {e}\")\n",
+                "        print(traceback.format_exc())\n",
+                "\n",
+                "\n",
+                "\n",
+                "clientOWN = mqtt.Client()\n",
+                "clientSAX = mqtt.Client()\n",
+                "\n",
+                "clientOWN.username_pw_set(MQTT_USERNAME, MQTT_PASSWORD)\n",
+                "clientSAX.username_pw_set(MQTTSAX_USERNAME, MQTTSAX_PASSWORD)\n",
+                "\n",
+                "clientOWN.on_connect = on_connectOWN\n",
+                "clientOWN.on_message = on_messageOWN\n",
+                "\n",
+                "clientSAX.on_connect = on_connectSAX\n",
+                "clientSAX.on_message = on_messageSAX\n",
+                "\n",
+                "print(\"Connecting to TTN MQTT broker...\")\n",
+                "clientOWN.connect(MQTT_BROKER)\n",
+                "clientSAX.connect(MQTT_BROKER)\n",
+                "\n",
+                "\n",
+                "clientOWN.loop_start()\n",
+                "clientSAX.loop_start()\n",
+                "\n",
+                "\n",
+                "\n",
+                "try:\n",
+                "    while True:\n",
+                "        pass\n",
+                "except KeyboardInterrupt:\n",
+                "    clientOWN.disconnect()\n",
+                "    clientSAX.disconnect()\n",
+                "    print(\"\\nDisconnecting...\")"
+            ],
+            "metadata": {
+                "azdata_cell_guid": "2748f8b0-a5f9-4821-b6f5-21789669f15a",
+                "language": "python"
+            },
+            "outputs": [
+                {
+                    "name": "stderr",
+                    "text": "/Users/xiefan/Library/Python/3.7/lib/python/site-packages/ipykernel_launcher.py:213: DeprecationWarning: Callback API version 1 is deprecated, update to latest version\n/Users/xiefan/Library/Python/3.7/lib/python/site-packages/ipykernel_launcher.py:214: DeprecationWarning: Callback API version 1 is deprecated, update to latest version\n",
+                    "output_type": "stream"
+                },
+                {
+                    "name": "stdout",
+                    "text": "Connecting to TTN MQTT broker...\nConnected to own deviceConnected to Saxion Devices\n\n",
+                    "output_type": "stream"
+                },
+                {
+                    "name": "stdout",
+                    "text": "Decoded payload: b'|Q\\x14\\x08+'\nTemperature: 20.8 °C\nHumidity: 43 %\nLuminosity: 81 Lux\nPressure: 1012.0 hPa\nLatitude: 52.2212025684184, Longitude: 6.88635438680649\nReceived from: mkr-saxion\nReceived at: 2024-11-26T08:03:15.736015771Z\n",
+                    "output_type": "stream"
+                },
+                {
+                    "name": "stdout",
+                    "text": "Inserted succesfuly\n",
+                    "output_type": "stream"
+                }
+            ],
+            "execution_count": null
+        }
+    ]
+}
