@@ -69,6 +69,7 @@ def on_messageOWN(client, userdata, msg):
             latitude = payload["uplink_message"]["rx_metadata"][0]["location"]["latitude"]
             longitude = payload["uplink_message"]["rx_metadata"][0]["location"]["longitude"]
             altitude = payload["uplink_message"]["rx_metadata"][0]["location"]["altitude"]
+            gateway = payload["uplink_message"]["rx_metadata"][0]["gateway_ids"]["gateway_id"]
             receivedAt = payload["received_at"]
             
             weatherDict = parseMKR(decoded_payload)
@@ -89,6 +90,7 @@ def on_messageOWN(client, userdata, msg):
             print(f"Received at: {receivedAt}")
             deviceID = payload["end_device_ids"]["device_id"]
             modelID = payload["uplink_message"]["version_ids"]["model_id"]
+            snr = payload["uplink_message"]["rx_metadata"][0]["snr"]
             #Create a cursor
             cursor = conn.cursor()
             #Check the existence of device
@@ -98,11 +100,20 @@ def on_messageOWN(client, userdata, msg):
             device_exists = cursor.fetchone()
             #insert device if not existing
             if not device_exists:
-                cursor.execute("""INSERT INTO device(deviceID, longitude, latitude, altitude, modelID)  VALUES (?, ?, ?, ?, ?) """, (deviceID, longitude, latitude, altitude, modelID))
+                cursor.execute("""INSERT INTO device(deviceID, longitude, latitude, altitude, gateway, modelID)  VALUES (?, ?, ?, ?, ?, ?) """, (deviceID, longitude, latitude, altitude, gateway, modelID))
             else:
-                 print("own device already exists, skipping device insertion.")
+                cursor.execute("""
+                UPDATE device
+                SET 
+                    modelID = ?,
+                    longitude = ?,
+                    latitude = ?,
+                    altitude = ?,
+                    gateway = ?
+                WHERE deviceID = ?;
+                """, (modelID, longitude, latitude, altitude, gateway, deviceID))
             #insert weather data
-            cursor.execute("""INSERT INTO weather(humidity, luminosity, pressure, temperature, date, deviceID) VALUES (?, ?, ?, ?, ?, ?)""", (humidity, luminosity, pressure, temp, receivedAt, deviceID))
+            cursor.execute("""INSERT INTO weather(humidity, luminosity, pressure, temperature, date, deviceID, SNR) VALUES (?, ?, ?, ?, ?, ?, ?)""", (humidity, luminosity, pressure, temp, receivedAt, deviceID, snr))
             cursor.commit()
             cursor.close()
             print("Inserted succesfuly")
@@ -182,9 +193,12 @@ def on_messageSAX(client, userdata, msg):
                 print(f"Latitude: {latitude}, Longitude: {longitude}")
                 print(f"Received from: {payload['end_device_ids']['device_id']}")
                 print(f"Received at: {receivedAt}")
+            snr = payload["uplink_message"]["rx_metadata"][0]["snr"]
+            gateway = payload["uplink_message"]["rx_metadata"][0]["gateway_ids"]["gateway_id"]
             deviceID = payload["end_device_ids"]["device_id"]
             modelID = payload["uplink_message"]["version_ids"]["model_id"]
-            
+            if gateway == "packetbroker":
+                gateway  = "centrum-enschede"
             cursor = conn.cursor()
             #check the existance of device (referenced from gpt)
             query = "SELECT 1 FROM device WHERE deviceID = ?"
@@ -193,13 +207,23 @@ def on_messageSAX(client, userdata, msg):
  
             #insert device if it doesnt exist
             if not device_exists:
-                cursor.execute(""" INSERT INTO device(deviceID, longitude, latitude, altitude, modelID) 
-                VALUES (?, ?, ?, ?, ?)""", (deviceID, longitude, latitude, altitude, modelID))
+                cursor.execute(""" INSERT INTO device(deviceID, longitude, latitude, altitude, gateway, modelID) 
+                VALUES (?, ?, ?, ?, ?, ?)""", (deviceID, longitude, latitude, altitude, gateway, modelID))
             else:
-                print(f"{deviceID} device already exists, skipping device insertion.")
+                cursor.execute("""
+                UPDATE device
+                SET 
+                    modelID = ?,
+                    longitude = ?,
+                    latitude = ?,
+                    altitude = ?,
+                    gateway = ?
+                WHERE deviceID = ?;
+                """, (modelID, longitude, latitude, altitude,gateway, deviceID))
+                print("update device data successfully")
                 #insert weather data
-            cursor.execute("""INSERT INTO weather(humidity, luminosity, pressure, temperature, date, deviceID) 
-            VALUES (?, ?, ?, ?, ?, ?)""", (humidity, luminosity, pressure, temp, receivedAt, deviceID))
+            cursor.execute("""INSERT INTO weather(humidity, luminosity, pressure, temperature, date, deviceID, SNR) 
+            VALUES (?, ?, ?, ?, ?, ?, ?)""", (humidity, luminosity, pressure, temp, receivedAt, deviceID, snr))
             cursor.commit()
             cursor.close()
             print("Inserted succesfuly")
