@@ -59,7 +59,7 @@ def on_messageOWN(client, userdata, msg):
         payload = json.loads(msg.payload.decode('utf-8'))
         decoded_payload = base64.b64decode(payload["uplink_message"]["frm_payload"])
         print(f"Decoded payload: {decoded_payload}")
-    
+        battery_voltage = None
         if "uplink_message" in payload:
             b64_data = payload["uplink_message"]["frm_payload"]
             deviceID = payload["end_device_ids"]["device_id"]
@@ -113,7 +113,8 @@ def on_messageOWN(client, userdata, msg):
                 WHERE deviceID = ?;
                 """, (modelID, longitude, latitude, altitude, gateway, deviceID))
             #insert weather data
-            cursor.execute("""INSERT INTO weather(humidity, luminosity, pressure, temperature, date, deviceID, SNR) VALUES (?, ?, ?, ?, ?, ?, ?)""", (humidity, luminosity, pressure, temp, receivedAt, deviceID, snr))
+            cursor.execute("""INSERT INTO weather(humidity, luminosity, pressure, temperature, date, deviceID, SNR, battery_voltage) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)""", (humidity, luminosity, pressure, temp, receivedAt, deviceID, snr, battery_voltage))
             cursor.commit()
             cursor.close()
             print("Inserted succesfuly")
@@ -144,7 +145,7 @@ def on_messageSAX(client, userdata, msg):
         #parsing
         payload = json.loads(msg.payload.decode('utf-8'))
         pressure = None
-    
+        battery_voltage = None
         if "uplink_message" in payload:
 
             decoded_payload = base64.b64decode(payload["uplink_message"]["frm_payload"])
@@ -154,6 +155,7 @@ def on_messageSAX(client, userdata, msg):
                 latitude = payload["uplink_message"]["rx_metadata"][0]["location"]['latitude']
                 longitude = payload["uplink_message"]["rx_metadata"][0]["location"]['longitude']
                 altitude = payload["uplink_message"]["rx_metadata"][0]["location"]['altitude']
+                battery_voltage = payload["uplink_message"]["decoded_payload"]["BatV"]
                 receivedAt = payload["received_at"]
                 
                 temp = (decoded_payload[2] << 8 | decoded_payload[3]) / 100
@@ -222,8 +224,8 @@ def on_messageSAX(client, userdata, msg):
                 """, (modelID, longitude, latitude, altitude,gateway, deviceID))
                 print("update device data successfully")
                 #insert weather data
-            cursor.execute("""INSERT INTO weather(humidity, luminosity, pressure, temperature, date, deviceID, SNR) 
-            VALUES (?, ?, ?, ?, ?, ?, ?)""", (humidity, luminosity, pressure, temp, receivedAt, deviceID, snr))
+            cursor.execute("""INSERT INTO weather(humidity, luminosity, pressure, temperature, date, deviceID, SNR, battery_voltage) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)""", (humidity, luminosity, pressure, temp, receivedAt, deviceID, snr, battery_voltage))
             cursor.commit()
             cursor.close()
             print("Inserted succesfuly")
