@@ -3,9 +3,8 @@ CREATE DATABASE weather_state
 CREATE TABLE device(
     deviceID CHAR(50) PRIMARY KEY,
     modelID CHAR(50),
-    latitude FLOAT,
-    longitude FLOAT,
-    altitude FLOAT
+    battery_voltage FLOAT,
+    battery_percentage FLOAT
 
 );
 
