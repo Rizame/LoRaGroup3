@@ -146,6 +146,7 @@ def on_messageSAX(client, userdata, msg):
         payload = json.loads(msg.payload.decode('utf-8'))
         pressure = None
         battery_voltage = None
+        battery_percentage = None
         if "uplink_message" in payload:
 
             decoded_payload = base64.b64decode(payload["uplink_message"]["frm_payload"])
@@ -158,6 +159,7 @@ def on_messageSAX(client, userdata, msg):
                 battery_voltage = payload["uplink_message"]["decoded_payload"]["BatV"]
                 receivedAt = payload["received_at"]
                 
+                battery_percentage = (battery_voltage-2.0) / 1.6 * 100
                 temp = (decoded_payload[2] << 8 | decoded_payload[3]) / 100
                 humidity = (decoded_payload[4] << 8 | decoded_payload[5]) / 10
                 luminosity = 0
@@ -224,8 +226,8 @@ def on_messageSAX(client, userdata, msg):
                 """, (modelID, longitude, latitude, altitude,gateway, deviceID))
                 print("update device data successfully")
                 #insert weather data
-            cursor.execute("""INSERT INTO weather(humidity, luminosity, pressure, temperature, date, deviceID, SNR, battery_voltage) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)""", (humidity, luminosity, pressure, temp, receivedAt, deviceID, snr, battery_voltage))
+            cursor.execute("""INSERT INTO weather(humidity, luminosity, pressure, temperature, date, deviceID, SNR, battery_voltage, battery_percentage) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)""", (humidity, luminosity, pressure, temp, receivedAt, deviceID, snr, battery_voltage, battery_percentage))
             cursor.commit()
             cursor.close()
             print("Inserted succesfuly")
