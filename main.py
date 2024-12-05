@@ -230,10 +230,11 @@ def on_messageSAX(client, userdata, msg):
             cursor.execute(query, (deviceID,))
             device_exists = cursor.fetchone()
  
-            #insert device if it doesnt exist
+            #insert/update device
             if not device_exists:
                 cursor.execute(""" INSERT INTO device(deviceID, modelID, battery_voltage, battery_percentage) 
-                VALUES (?, ?, ?, ?, ?, ?, ?)""", (deviceID, modelID, battery_voltage, battery_percentage))
+                VALUES (?, ?, ?, ?)""", (deviceID, modelID, battery_voltage, battery_percentage))
+                print("Insert data to device tabl successfully")
             else:
                 cursor.execute("""
                 UPDATE device
@@ -244,26 +245,36 @@ def on_messageSAX(client, userdata, msg):
                 WHERE deviceID = ?;
                 """, (modelID, battery_voltage, battery_percentage, deviceID))
                 print("update device data successfully")
-                #insert weather data
-            
-            query = "SELECT 1 FROM gateway WHERE gatewayID = ?"
-            cursor.execute(query, (gateway,))
+                
+            #insert/update data
+            query = "SELECT 1 FROM gateway WHERE gatewayID = ? and deviceID = ?"
+            cursor.execute(query, (gateway,deviceID))
             gateweay_exists = cursor.fetchone()
             if not gateweay_exists:
-                cursor.execute(""" INSERT INTO gateway(gatewayID, latitude, longitude, altitude, avg_rssi, snr, max_rssi, min_rssi) 
-                VALUES (?, ?, ?, ?, ?, ?, ?)""", (gateway, latitude, longitude, altitude, rssi, snr, rssi, rssi))
+                cursor.execute(""" INSERT INTO 
+                gateway(gatewayID,deviceID, latitude, longitude, altitude, avg_rssi, avg_snr, max_rssi, min_rssi) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""", (gateway, deviceID, latitude, longitude, altitude, rssi, snr, rssi, rssi))
+                print("insert to gateway successfully")
             else:
-                cursor.execute("SELECT MAX(max_rssi), MIN(min_rssi), rssi FROM your_table")
-                max_rssi, min_rssi, average_rssi = cursor.fetchone()
+                cursor.execute("SELECT max_rssi, min_rssi, avg_rssi, avg_snr FROM gateway WHERE gatewayID = ? AND deviceID = ? ", (gateway, deviceID))
+                max_rssi, min_rssi, average_rssi, average_snr = cursor.fetchone()
                 if(rssi > max_rssi):
-                    cursor.execute("UPDATE gateway SET maxRssi = ?", (rssi))
+                    max_rssi = rssi
                 elif(rssi < min_rssi):
-                    cursor.execute("UPDATE gateway SET minRssi = ?", (rssi))
+                    min_rssi = rssi
                 average_rssi = (rssi * 10 + average_rssi)/11
+                average_snr = (snr*10 + average_snr)/11
                 cursor.execute("UPDATE gateway SET avg_rssi = ?", (average_rssi))
+                cursor.execute("""UPDATE gateway
+                SET avg_rssi = ?, avg_snr = ?, max_rssi = ?, min_rssi = ?
+                WHERE gatewayID = ? AND deviceID = ?
+                """, (average_rssi, average_snr, max_rssi, min_rssi, gateway, deviceID))
+                print("Gateway data updated successfully.")
 
+            #insert weather
             cursor.execute("""INSERT INTO weather(humidity, luminosity, pressure, temperature, date, deviceID) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)""", (humidity, luminosity, pressure, temp, receivedAt, deviceID))
+            VALUES (?, ?, ?, ?, ?, ?)""", (humidity, luminosity, pressure, temp, receivedAt, deviceID))
+            print("insert to weather successfully")
             cursor.commit()
             cursor.close()
             print("Inserted succesfuly")
