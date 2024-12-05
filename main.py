@@ -3,6 +3,7 @@ import traceback
 import paho.mqtt.client as mqtt
 import base64
 import json
+import math
 
 # Connection details
 server = 'group13.database.windows.net,1433'
@@ -92,6 +93,7 @@ def on_messageOWN(client, userdata, msg):
             deviceID = payload["end_device_ids"]["device_id"]
             modelID = payload["uplink_message"]["version_ids"]["model_id"]
             snr = payload["uplink_message"]["rx_metadata"][0]["snr"]
+            luminosity_percentage = math.log(luminosity)/math.log(660)*100
             #Create a cursor
             cursor = conn.cursor()
             #Check the existence of device
@@ -130,7 +132,7 @@ def on_messageOWN(client, userdata, msg):
                 """, (average_rssi, average_snr, max_rssi, min_rssi, gateway, deviceID))
             #insert weather date
             cursor.execute("""INSERT INTO weather(humidity, luminosity, pressure, temperature, date, deviceID) 
-            VALUES (?, ?, ?, ?, ?, ?)""", (humidity, luminosity, pressure, temp, receivedAt, deviceID))
+            VALUES (?, ?, ?, ?, ?, ?)""", (humidity, luminosity_percentage, pressure, temp, receivedAt, deviceID))
             print("insert to weather successfully")
             cursor.commit()
             cursor.close()
@@ -180,12 +182,14 @@ def on_messageSAX(client, userdata, msg):
                 temp = (decoded_payload[2] << 8 | decoded_payload[3]) / 100
                 humidity = (decoded_payload[4] << 8 | decoded_payload[5]) / 10
                 luminosity = None
+                luminosity_percentage = None
                 externalTemp = None
                 if decoded_payload[6] == 1:
                     externalTemp = decoded_payload[7] << 8 | decoded_payload[8]
                     print(f"External temperature: {externalTemp}°C")
                 elif decoded_payload[6] == 5:
                     luminosity = decoded_payload[7] << 8 | decoded_payload[8]
+                    luminosity_percentage = math.log(luminosity)/math.log(65535)*100
                     print(f"Luminosity: {luminosity}%")
                 print("Temperature:", temp, "°C")
                 print("Humidity:", humidity, "%")
@@ -205,7 +209,7 @@ def on_messageSAX(client, userdata, msg):
                 luminosity = weatherDict["luminosity"]
                 temp = weatherDict["temperature"]
                 humidity = weatherDict["humidity"]
-
+                luminosity_percentage = math.log(luminosity)/math.log(255) * 100
                 print("Temperature:", temp, "°C")
                 print("Humidity:", humidity, "%")
                 print("Luminosity:", luminosity, "Lux")
@@ -219,9 +223,9 @@ def on_messageSAX(client, userdata, msg):
             gateway = payload["uplink_message"]["rx_metadata"][0]["gateway_ids"]["gateway_id"]
             deviceID = payload["end_device_ids"]["device_id"]
             modelID = payload["uplink_message"]["version_ids"]["model_id"]
-           
+            
             cursor = conn.cursor()
-            #check the existance of device (referenced from gpt)
+            #insert/update device
             query = "SELECT 1 FROM device WHERE deviceID = ?"
             cursor.execute(query, (deviceID,))
             device_exists = cursor.fetchone()
@@ -268,7 +272,7 @@ def on_messageSAX(client, userdata, msg):
 
             #insert weather
             cursor.execute("""INSERT INTO weather(humidity, luminosity, pressure, temperature, date, deviceID) 
-            VALUES (?, ?, ?, ?, ?, ?)""", (humidity, luminosity, pressure, temp, receivedAt, deviceID))
+            VALUES (?, ?, ?, ?, ?, ?)""", (humidity, luminosity_percentage, pressure, temp, receivedAt, deviceID))
             print("insert to weather successfully")
             cursor.commit()
             cursor.close()
