@@ -93,7 +93,7 @@ def on_messageOWN(client, userdata, msg):
             deviceID = payload["end_device_ids"]["device_id"]
             modelID = payload["uplink_message"]["version_ids"]["model_id"]
             snr = payload["uplink_message"]["rx_metadata"][0]["snr"]
-            luminosity_percentage = math.log(luminosity)/math.log(660)*100
+            luminosity_percentage = math.log(luminosity)/math.log(255)*100
             #Create a cursor
             cursor = conn.cursor()
             #Check the existence of device
