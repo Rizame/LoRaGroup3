@@ -19,7 +19,7 @@ conn = pyodbc.connect(connection_string)
 
 
 
-MQTT_TOPIC = "v3/ibfkpj@ttn/devices/ibfklora/up"
+MQTT_TOPIC = "v3/ibfkpj@ttn/devices/ibfkloranew/up"
 MQTTSAX_TOPIC = "v3/project-software-engineering@ttn/devices/+/up"
 MQTT_BROKER = "eu1.cloud.thethings.network"
 MQTT_PORT = 1883
@@ -27,7 +27,7 @@ MQTT_PORT = 1883
 MQTT_USERNAME = "ibfkpj@ttn"
 MQTTSAX_USERNAME = "project-software-engineering@ttn"
 
-MQTT_PASSWORD = "NNSXS.LXYD6VAHPEP5VRUS7TIRO6K3OQA2KYEHS74CIFQ.ETFHW5J36LBAQ4ND6TYK4KV6MIEPGBT63M4VVEIN3M7M5US52NAQ" 
+MQTT_PASSWORD = "NNSXS.LWGI7G24XBYHC6LLPMNRW6CISCJ7WYMG7X3NIJY.74GPZWD52EEVEOYRA5LZUUXYNSCUNO6K6FOSNCFL4C3PIEB67BEA" 
 MQTTSAX_PASSWORD = "NNSXS.DTT4HTNBXEQDZ4QYU6SG73Q2OXCERCZ6574RVXI.CQE6IG6FYNJOO2MOFMXZVWZE4GXTCC2YXNQNFDLQL4APZMWU6ZGA"
 
 
@@ -61,6 +61,7 @@ def on_messageOWN(client, userdata, msg):
         decoded_payload = base64.b64decode(payload["uplink_message"]["frm_payload"])
         print(f"Decoded payload: {decoded_payload}")
         battery_voltage = None
+        externalTemp = None
         if "uplink_message" in payload:
             b64_data = payload["uplink_message"]["frm_payload"]
             deviceID = payload["end_device_ids"]["device_id"]
@@ -72,6 +73,8 @@ def on_messageOWN(client, userdata, msg):
             longitude = payload["uplink_message"]["rx_metadata"][0]["location"]["longitude"]
             altitude = payload["uplink_message"]["rx_metadata"][0]["location"]["altitude"]
             gateway = payload["uplink_message"]["rx_metadata"][0]["gateway_ids"]["gateway_id"]
+            rssi = payload["uplink_message"]["rx_metadata"][0]["rssi"]
+            snr = payload["uplink_message"]["rx_metadata"][0]["snr"]
             receivedAt = payload["received_at"]
             
             weatherDict = parseMKR(decoded_payload)
@@ -114,25 +117,29 @@ def on_messageOWN(client, userdata, msg):
             gateweay_exists = cursor.fetchone()
             if not gateweay_exists:
                 cursor.execute(""" INSERT INTO 
-                gateway(gatewayID,deviceID, latitude, longitude, altitude, avg_rssi, avg_snr, max_rssi, min_rssi) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""", (gateway, deviceID, latitude, longitude, altitude, rssi, snr, rssi, rssi))
+                gateway(gatewayID,deviceID, latitude, longitude, altitude, avg_rssi, avg_snr, max_rssi, min_rssi, max_snr, min_snr) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""", (gateway, deviceID, latitude, longitude, altitude, rssi, snr, rssi, rssi, snr, snr))
                 print("insert to gateway successfully")
             else:
-                cursor.execute("SELECT max_rssi, min_rssi, avg_rssi, avg_snr FROM gateway WHERE gatewayID = ? AND deviceID = ? ", (gateway, deviceID))
-                max_rssi, min_rssi, average_rssi, average_snr = cursor.fetchone()
+                cursor.execute("SELECT max_rssi, min_rssi, max_snr, min_snr, avg_rssi, avg_snr FROM gateway WHERE gatewayID = ? AND deviceID = ? ", (gateway, deviceID))
+                max_rssi, min_rssi, max_snr, min_snr, average_rssi, average_snr = cursor.fetchone()
                 if(rssi > max_rssi):
                     max_rssi = rssi
                 elif(rssi < min_rssi):
                     min_rssi = rssi
+                if(snr > max_snr):
+                    max_snr = snr
+                elif(snr < min_snr):
+                    min_snr = snr
                 average_rssi = (rssi * 10 + average_rssi)/11
                 average_snr = (snr*10 + average_snr)/11
                 cursor.execute("""UPDATE gateway
-                SET avg_rssi = ?, avg_snr = ?, max_rssi = ?, min_rssi = ?
+                SET avg_rssi = ?, avg_snr = ?, max_rssi = ?, min_rssi = ?, max_snr = ?, min_snr = ?
                 WHERE gatewayID = ? AND deviceID = ?
-                """, (average_rssi, average_snr, max_rssi, min_rssi, gateway, deviceID))
+                """, (average_rssi, average_snr, max_rssi, min_rssi, max_snr, min_snr, gateway, deviceID))
             #insert weather date
-            cursor.execute("""INSERT INTO weather(humidity, luminosity, pressure, temperature, date, deviceID) 
-            VALUES (?, ?, ?, ?, ?, ?)""", (humidity, luminosity_percentage, pressure, temp, receivedAt, deviceID))
+            cursor.execute("""INSERT INTO weather(humidity, luminosity, pressure, inside_temperature, external_temperature, date, deviceID) 
+            VALUES (?, ?, ?, ?, ?, ?, ?)""", (humidity, luminosity_percentage, pressure, temp, externalTemp, receivedAt, deviceID))
             print("insert to weather successfully")
             cursor.commit()
             cursor.close()
@@ -166,6 +173,7 @@ def on_messageSAX(client, userdata, msg):
         pressure = None
         battery_voltage = None
         battery_percentage = None
+        externalTemp = None
         if "uplink_message" in payload:
 
             decoded_payload = base64.b64decode(payload["uplink_message"]["frm_payload"])
@@ -183,14 +191,17 @@ def on_messageSAX(client, userdata, msg):
                 humidity = (decoded_payload[4] << 8 | decoded_payload[5]) / 10
                 luminosity = None
                 luminosity_percentage = None
-                externalTemp = None
+
                 if decoded_payload[6] == 1:
-                    externalTemp = decoded_payload[7] << 8 | decoded_payload[8]
+                    externalTemp = (decoded_payload[7] << 8 | decoded_payload[8]) / 100
+
                     print(f"External temperature: {externalTemp}°C")
                 elif decoded_payload[6] == 5:
                     luminosity = decoded_payload[7] << 8 | decoded_payload[8]
                     luminosity_percentage = math.log(luminosity)/math.log(65535)*100
                     print(f"Luminosity: {luminosity}%")
+                    externalTemp = temp
+                    temp = None
                 print("Temperature:", temp, "°C")
                 print("Humidity:", humidity, "%")
                 print("location:", latitude, "-", longitude)
@@ -208,6 +219,10 @@ def on_messageSAX(client, userdata, msg):
                 pressure = weatherDict["pressure"]
                 luminosity = weatherDict["luminosity"]
                 temp = weatherDict["temperature"]
+                if(temp < 12.0):
+                    externalTemp = temp
+                    temp = None
+
                 humidity = weatherDict["humidity"]
                 luminosity_percentage = math.log(luminosity)/math.log(255) * 100
                 print("Temperature:", temp, "°C")
@@ -255,24 +270,28 @@ def on_messageSAX(client, userdata, msg):
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""", (gateway, deviceID, latitude, longitude, altitude, rssi, snr, rssi, rssi))
                 print("insert to gateway successfully")
             else:
-                cursor.execute("SELECT max_rssi, min_rssi, avg_rssi, avg_snr FROM gateway WHERE gatewayID = ? AND deviceID = ? ", (gateway, deviceID))
-                max_rssi, min_rssi, average_rssi, average_snr = cursor.fetchone()
+                cursor.execute("SELECT max_rssi, min_rssi, max_snr, min_snr, avg_rssi, avg_snr FROM gateway WHERE gatewayID = ? AND deviceID = ? ", (gateway, deviceID))
+                max_rssi, min_rssi, max_snr, min_snr, average_rssi, average_snr = cursor.fetchone()
                 if(rssi > max_rssi):
                     max_rssi = rssi
                 elif(rssi < min_rssi):
                     min_rssi = rssi
                 average_rssi = (rssi * 10 + average_rssi)/11
                 average_snr = (snr*10 + average_snr)/11
+                if(snr > max_snr):
+                    max_snr = snr
+                elif(snr < min_snr):
+                    min_snr = snr
                 
                 cursor.execute("""UPDATE gateway
-                SET avg_rssi = ?, avg_snr = ?, max_rssi = ?, min_rssi = ?
+                SET avg_rssi = ?, avg_snr = ?, max_rssi = ?, min_rssi = ?, max_snr = ?, min_snr = ?
                 WHERE gatewayID = ? AND deviceID = ?
-                """, (average_rssi, average_snr, max_rssi, min_rssi, gateway, deviceID))
+                """, (average_rssi, average_snr, max_rssi, min_rssi, max_snr, min_snr, gateway, deviceID))
                 print("Gateway data updated successfully.")
 
             #insert weather
-            cursor.execute("""INSERT INTO weather(humidity, luminosity, pressure, temperature, date, deviceID) 
-            VALUES (?, ?, ?, ?, ?, ?)""", (humidity, luminosity_percentage, pressure, temp, receivedAt, deviceID))
+            cursor.execute("""INSERT INTO weather(humidity, luminosity, pressure, inside_temperature, external_temperature, date, deviceID) 
+            VALUES (?, ?, ?, ?, ?, ?, ?)""", (humidity, luminosity_percentage, pressure, temp,externalTemp,receivedAt, deviceID))
             print("insert to weather successfully")
             cursor.commit()
             cursor.close()
