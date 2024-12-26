@@ -96,7 +96,9 @@ def on_messageOWN(client, userdata, msg):
             deviceID = payload["end_device_ids"]["device_id"]
             modelID = payload["uplink_message"]["version_ids"]["model_id"]
             snr = payload["uplink_message"]["rx_metadata"][0]["snr"]
-            luminosity_percentage = math.log(luminosity)/math.log(660)*100
+            luminosity_percentage = 0
+            if(luminosity!= 0):
+                luminosity_percentage = math.log(luminosity)/math.log(660)*100
             #Create a cursor
             cursor = conn.cursor()
             #Check the existence of device
@@ -174,6 +176,7 @@ def on_messageSAX(client, userdata, msg):
         battery_voltage = None
         battery_percentage = None
         externalTemp = None
+        luminosity_percentage = 0
         if "uplink_message" in payload:
 
             decoded_payload = base64.b64decode(payload["uplink_message"]["frm_payload"])
@@ -190,7 +193,6 @@ def on_messageSAX(client, userdata, msg):
                 temp = (decoded_payload[2] << 8 | decoded_payload[3]) / 100
                 humidity = (decoded_payload[4] << 8 | decoded_payload[5]) / 10
                 luminosity = None
-                luminosity_percentage = None
 
                 if decoded_payload[6] == 1:
                     externalTemp = (decoded_payload[7] << 8 | decoded_payload[8]) / 100
@@ -198,7 +200,10 @@ def on_messageSAX(client, userdata, msg):
                     print(f"External temperature: {externalTemp}°C")
                 elif decoded_payload[6] == 5:
                     luminosity = decoded_payload[7] << 8 | decoded_payload[8]
-                    luminosity_percentage = math.log(luminosity)/math.log(65535)*100
+                    print(f"math(log): {luminosity}%")
+                    if(luminosity!= 0):
+                        luminosity_percentage = math.log(luminosity)/math.log(65535)*100
+
                     print(f"Luminosity: {luminosity}%")
                     externalTemp = temp
                     temp = None
@@ -224,7 +229,9 @@ def on_messageSAX(client, userdata, msg):
                     temp = None
 
                 humidity = weatherDict["humidity"]
-                luminosity_percentage = math.log(luminosity)/math.log(255) * 100
+                print(f"math(log): {luminosity}%")
+                if(luminosity!= 0):
+                    luminosity_percentage = math.log(luminosity)/math.log(255) * 100
                 print("Temperature:", temp, "°C")
                 print("Humidity:", humidity, "%")
                 print("Luminosity:", luminosity, "Lux")
