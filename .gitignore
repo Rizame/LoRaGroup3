@@ -1,5 +1,4 @@
 venv/
 db_create
-Dockerfile
 parser.tar
 requirements.txt
